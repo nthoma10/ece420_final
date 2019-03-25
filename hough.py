@@ -31,7 +31,7 @@ min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
 
 print(min_val, max_val)
 # create threshold from min val, find where sqdiff is less than thresh
-match_locations = np.where(res>=0.2)
+match_locations = np.where(res>=0.23)
 print(match_locations)
 # draw template match boxes
 w, h = template.shape[::-1]
