@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 from matplotlib import pyplot as plt
 
-img = cv2.imread("circuit.jpg")
+img = cv2.imread("circuit3.jpg")
 gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
 resistor = cv2.imread("resistor.jpg",0)
@@ -25,7 +25,7 @@ min_val_90, max_val_90, min_loc_90, max_loc_90 = cv2.minMaxLoc(res90)
 min_vals, max_vals, min_locs, max_locs = cv2.minMaxLoc(src)
 
 # create threshold from min val, find where sqdiff is less than thresh
-match_locations = np.where(res/max_val>=0.9895)
+match_locations = np.where(res/max_val>=0.9995)
 match_locations_90 = np.where(res90/max_val_90 >= 0.9995)
 match_locations_src = np.where(src/max_vals>=0.999)
 

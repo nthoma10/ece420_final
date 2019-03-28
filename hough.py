@@ -3,7 +3,7 @@ import numpy as np
 import random
 
 
-img = cv2.imread("circuit.jpg")
+img = cv2.imread("circuit3.jpg")
 gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
 template = cv2.imread("resistor.jpg",0)
