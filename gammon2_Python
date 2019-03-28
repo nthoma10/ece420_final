@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 from matplotlib import pyplot as plt
 
-img = cv2.imread("circuit2.jpg")
+img = cv2.imread("circuit3.jpg")
 gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
 resistor = cv2.imread("res.jpg",0)
@@ -39,9 +39,9 @@ for (x, y) in zip(match_locations_90[1], match_locations_90[0]):
 for (x, y) in zip(match_locations_src[1], match_locations_src[0]):
     cv2.rectangle(img, (x, y), (x+ws, y+hs), [255,0,255], 2)    
 edges = cv2.Canny(gray,50,150,apertureSize = 3)  
-minLineLength = 50
+minLineLength = 200
 maxLineGap = 10
-lines = cv2.HoughLinesP(edges,1,np.pi/180,100,minLineLength,maxLineGap)
+lines = cv2.HoughLinesP(edges,1,np.pi/180,70,minLineLength,maxLineGap)
 for i in range(len(lines)):
     for x1,y1,x2,y2 in lines[i]:
         cv2.line(img,(x1,y1),(x2,y2),(0,255,0),2)
