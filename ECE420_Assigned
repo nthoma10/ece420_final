@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 from matplotlib import pyplot as plt
 
-img = cv2.imread("circuit3.jpg")
+img = cv2.imread("circuit4.jpg")
 gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
 resistor = cv2.imread("res.jpg",0)
@@ -10,26 +10,26 @@ resistor90 = cv2.imread("res90.jpg",0)
 source = cv2.imread("source.jpg",0)
 #node = cv2.imread("node.jpg",0)
 
-#cv2.imshow('',img)
 wres, hres = resistor.shape[::-1]
 wres90, hres90 = resistor90.shape[::-1]
 ws, hs = source.shape[::-1]
 #wn, hn = node.shape[::-1]
-#cv2.imshow('',gray)
+
 res = cv2.matchTemplate(gray, resistor, cv2.TM_SQDIFF_NORMED)
 res90 = cv2.matchTemplate(gray, resistor90, cv2.TM_SQDIFF_NORMED)
 src = cv2.matchTemplate(gray, source, cv2.TM_SQDIFF_NORMED)
 #nd = cv2.matchTemplate(gray, node, cv2.TM_SQDIFF_NORMED)
+
 min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
 min_val_90, max_val_90, min_loc_90, max_loc_90 = cv2.minMaxLoc(res90)
 min_vals, max_vals, min_locs, max_locs = cv2.minMaxLoc(src)
 #min_valn, max_valn, min_locn, max_locn = cv2.minMaxLoc(nd)
 
 # create threshold from min val, find where sqdiff is less than thresh
-match_locations = np.where(res/max_val>=0.9995)
-match_locations_90 = np.where(res90/max_val_90 >= 0.9995)
-match_locations_src = np.where(src/max_vals>=0.999)
-#match_locations_nd = np.where(nd/max_valn>=0.80463)
+match_locations = np.where(res/max_val>=0.99925)
+match_locations_90 = np.where(res90/max_val_90 >= 0.99925)
+match_locations_src = np.where(src/max_vals>=0.99925)
+#match_locations_nd = np.where(nd/max_valn>=0.99925)
 
 
 print("Resistors Found: ", len(match_locations_90[0])+len(match_locations[0]))
@@ -43,29 +43,298 @@ for (x, y) in zip(match_locations[1], match_locations[0]):
     cv2.putText(img,"R"+str(i), (x,y), cv2.FONT_HERSHEY_SIMPLEX, 1.5, 255)
     i+=1
 for (x, y) in zip(match_locations_90[1], match_locations_90[0]):
-    cv2.rectangle(img, (x, y), (x+wres90, y+hres90), [0,0,255], 2)
-    cv2.putText(img,"R"+str(i), (x,y), cv2.FONT_HERSHEY_SIMPLEX, 1.5, 255)
+    cv2.rectangle(img, (x, y), (x+wres90, y+hres90), [0,255,255], 2)
+    cv2.putText(img,"R"+str(i), (x+20,y), cv2.FONT_HERSHEY_SIMPLEX, 1.5, 255)
     i+=1
 i = 1
 for (x, y) in zip(match_locations_src[1], match_locations_src[0]):
     cv2.rectangle(img, (x, y), (x+ws, y+hs), [255,0,255], 2)
+    #cv2.rectangle(img, (int(x+ws/2)+2, y-2), (int(x+ws/2)+2, y-4), [255,0,255], 2)
     cv2.putText(img,"V"+str(i), (x,y), cv2.FONT_HERSHEY_SIMPLEX, 1.5, 255)
+    if i == 1:
+        xtrav = int(x+ws/2)+2
+        ytrav = y-2
     i+=1
-#i = 1
+i = 1
+    
 #for (x, y) in zip(match_locations_nd[1], match_locations_nd[0]):
 #    cv2.rectangle(img, (x, y), (x+wn, y+hn), [255,255,0], 2)
 #    cv2.putText(img,"N"+str(i), (x,y), cv2.FONT_HERSHEY_SIMPLEX, 1.5, 255)
 #    i+=1
-edges = cv2.Canny(gray,50,150,apertureSize = 3)  
-minLineLength = 200
-maxLineGap = 10
-lines = cv2.HoughLinesP(edges,1,np.pi/180,55,minLineLength,maxLineGap)
-for i in range(len(lines)):
-    for x1,y1,x2,y2 in lines[i]:
-        cv2.line(img,(x1,y1),(x2,y2),(0,255,0),2)
+#edges = cv2.Canny(gray,50,150,apertureSize = 3)  
+#minLineLength = 200
+#maxLineGap = 10
+#lines = cv2.HoughLinesP(edges,1,np.pi/180,55,minLineLength,maxLineGap)
+#for i in range(len(lines)):
+#    for x1,y1,x2,y2 in lines[i]:
+#        cv2.line(img,(x1,y1),(x2,y2),(0,255,0),2)
     
-cv2.imwrite('houghlines5.jpg',img)
+#cv2.imwrite('houghlines5.jpg',img)
 
 # display result
 cv2.imshow('', img)
 cv2.waitKey(0)
+
+
+
+
+
+##### TRAVERSAL ALGORITHM ########
+flag = 1
+start = 1
+travup = 0
+travdown = 0
+travleft = 0
+travright = 0
+node = 0
+n = 0
+stored = []
+ar = []
+while flag:
+    space = 0
+    if start:
+        travup = 1
+        start = 0
+    if ar:
+        idx = len(ar)-1
+        if ar[idx][2]==0:
+            ytrav=ar[idx][0]
+            xtrav=ar[idx][1]
+            node=ar[idx][3]
+            ar=ar[:-1]
+            travup=1
+        elif ar[idx][2]==1:
+            ytrav=ar[idx][0]
+            xtrav=ar[idx][1]
+            node=ar[idx][3]
+            ar=ar[:-1]
+            travright=1
+        elif ar[idx][2]==2:
+            ytrav=ar[idx][0]
+            xtrav=ar[idx][1]
+            node=ar[idx][3]
+            ar=ar[:-1]
+            travdown=1
+        elif ar[idx][2]==3:
+            ytrav=ar[idx][0]
+            xtrav=ar[idx][1]
+            node=ar[idx][3]
+            ar=ar[:-1]
+            travleft=1
+    if travup == 1:
+        while travup:
+            if space-1>=0:
+                space-=1
+            for i in range(-3,3):
+                img[ytrav][xtrav+i] = [255,0,255]
+            pix_left = img[ytrav][xtrav-5]
+            pix_rite = img[ytrav][xtrav+5]
+            pix_up = img[ytrav-10][xtrav]
+            if (pix_left[0]==0 and pix_left[1]==0 and pix_left[2]==0 and space==0) and (pix_right[0]==0 and pix_right[1]==0 and pix_right[2]==0 and space==0):
+                if pix_up[0]==0 and pix_up[1]==0 and pix_up[2]==0:
+                    stored = [ytrav,xtrav-5,3,node]
+                    ar.append(stored)
+                    stored = [ytrav,xtrav+5,1,node]
+                    ar.append(stored)
+                else:
+                    stored = [ytrav,xtrav-5,3,node]
+                    ar.append(stored)
+                    stored = [ytrav,xtrav+5,1,node]
+                    ar.append(stored)
+                cv2.putText(img,"N"+str(node), (xtrav,ytrav-10), cv2.FONT_HERSHEY_SIMPLEX, 1.5, 255)
+                space = 8
+            
+            elif pix_left[0]==0 and pix_left[1]==0 and pix_left[2]==0 and space==0:
+                if pix_up[0]==0 and pix_up[1]==0 and pix_up[2]==0:
+                    stored = [ytrav,xtrav-5,3,node+1]
+                else:
+                    stored = [ytrav,xtrav-5,3,node]
+                ar.append(stored)
+                cv2.putText(img,"N"+str(node), (xtrav,ytrav-10), cv2.FONT_HERSHEY_SIMPLEX, 1.5, 255)
+                space = 8
+            
+            elif pix_rite[0]==0 and pix_rite[1]==0 and pix_rite[2]==0 and space==0:
+                if pix_up[0]==0 and pix_up[1]==0 and pix_up[2]==0:
+                    stored = [ytrav,xtrav+5,1,node+1]
+                    node+=1
+                else:
+                    stored = [ytrav,xtrav+5,1,node]
+                ar.append(stored)
+                cv2.putText(img,"N"+str(node), (xtrav,ytrav-10), cv2.FONT_HERSHEY_SIMPLEX, 1.5, 255)
+                space = 8
+            
+            ytrav -= 1
+            pix = img[ytrav][xtrav]
+            if(pix[0]==255 and pix[1]==0 and pix[2]==255):
+                travup=0
+                break
+            if(pix[0]==0 and pix[1]==255 and pix[2]==255):
+                ytrav-=hres90-5
+                pix = img[ytrav][xtrav]
+                node+=1
+            elif(pix[0]>50 or pix[1]>50 or pix[2]>50):
+                travup=0
+                
+    elif travright == 1:
+        while travright:
+            if space-1>=0:
+                space-=1
+            for i in range(-3,3):
+                img[ytrav+i][xtrav] = [255,0,255]
+            pix_up = img[ytrav-5][xtrav]
+            pix_down = img[ytrav+5][xtrav]
+            pix_rite = img[ytrav][xtrav+10]
+            if (pix_up[0]==0 and pix_up[1]==0 and pix_up[2]==0 and space==0) and (pix_down[0]==0 and pix_down[1]==0 and pix_down[2]==0 and space==0):
+                if pix_rite[0]==0 and pix_rite[1]==0 and pix_rite[2]==0:
+                    stored = [ytrav-5,xtrav+2,0,node+1]
+                    ar.append(stored)
+                    stored = [ytrav+5,xtrav+2,2,node+1]
+                    ar.append(stored)
+                else:
+                    stored = [ytrav+5,xtrav+2,0,node]
+                    ar.append(stored)
+                    stored = [ytrav+5,xtrav+2,2,node]
+                    ar.append(stored)
+                cv2.putText(img,"N"+str(node), (xtrav,ytrav-10), cv2.FONT_HERSHEY_SIMPLEX, 1.5, 255)
+                space = 8
+                
+            elif pix_up[0]==0 and pix_up[1]==0 and pix_up[2]==0 and space==0:
+                if pix_rite[0]==0 and pix_rite[1]==0 and pix_rite[2]==0:
+                    stored = [ytrav-5,xtrav+2,0,node+1]
+                else:
+                    stored = [ytrav-5,xtrav+2,0,node]
+                ar.append(stored)
+                cv2.putText(img,"N"+str(node), (xtrav,ytrav-10), cv2.FONT_HERSHEY_SIMPLEX, 1.5, 255)
+                space = 8
+            
+            elif pix_down[0]==0 and pix_down[1]==0 and pix_down[2]==0 and space==0:
+                if pix_rite[0]==0 and pix_rite[1]==0 and pix_rite[2]==0:
+                    stored = [ytrav+5,xtrav+2,2,node+2]
+                else:
+                    stored = [ytrav+5,xtrav+2,2,node]
+                ar.append(stored)
+                cv2.putText(img,"N"+str(node), (xtrav,ytrav-10), cv2.FONT_HERSHEY_SIMPLEX, 1.5, 255)
+                space = 8
+            
+            xtrav += 1
+            pix = img[ytrav][xtrav]
+            if(pix[0]==255 and pix[1]==0 and pix[2]==255):
+                travright=0
+                break
+            if(pix[0]==0 and pix[1]==255 and pix[2]==255):
+                xtrav+=wres+5
+                pix = img[ytrav][xtrav]
+                node+=1
+            elif(pix[0]>50 or pix[1]>50 or pix[2]>50):
+                travright=0
+                
+    elif travdown == 1:
+        while travdown:
+            if space-1>=0:
+                space-=1
+            for i in range(-3,3):
+                img[ytrav][xtrav+i] = [255,0,255]
+            pix_left = img[ytrav][xtrav-5]
+            pix_right = img[ytrav][xtrav+5]
+            pix_down = img[ytrav+10][xtrav]
+            if (pix_left[0]==0 and pix_left[1]==0 and pix_left[2]==0 and space==0) and (pix_right[0]==0 and pix_right[1]==0 and pix_right[2]==0 and space==0):
+                if pix_down[0]==0 and pix_down[1]==0 and pix_down[2]==0:
+                    stored = [ytrav,xtrav-5,3,node+1]
+                    ar.append(stored)
+                    stored = [ytrav,xtrav+5,1,node+1]
+                    ar.append(stored)
+                else:
+                    stored = [ytrav,xtrav-5,3,node+1]
+                    ar.append(stored)
+                    stored = [ytrav,xtrav+5,1,node+1]
+                    ar.append(stored)
+                cv2.putText(img,"N"+str(node+1), (xtrav,ytrav-10), cv2.FONT_HERSHEY_SIMPLEX, 1.5, 255)
+                space = 8
+            
+            elif pix_left[0]==0 and pix_left[1]==0 and pix_left[2]==0 and space==0:
+                if pix_down[0]==0 and pix_down[1]==0 and pix_down[2]==0:
+                    stored = [ytrav,xtrav-5,3,node+1]
+                else:
+                    stored = [ytrav,xtrav-5,3,node]
+                ar.append(stored)
+                cv2.putText(img,"N"+str(node), (xtrav,ytrav-10), cv2.FONT_HERSHEY_SIMPLEX, 1.5, 255)
+                space = 8
+                    
+            elif pix_right[0]==0 and pix_right[1]==0 and pix_right[2]==0 and space==0:
+                if pix_down[0]==0 and pix_down[1]==0 and pix_down[2]==0:
+                    stored = [ytrav,xtrav+5,1,node+1]
+                else:
+                    stored = [ytrav,xtrav+5,1,node]
+                ar.append(stored)
+                cv2.putText(img,"N"+str(node), (xtrav,ytrav-10), cv2.FONT_HERSHEY_SIMPLEX, 1.5, 255)
+                space = 8
+                
+            ytrav += 1
+            pix = img[ytrav][xtrav]
+            if(pix[0]==255 and pix[1]==0 and pix[2]==255):
+                travdown=0
+                break
+            if(pix[0]==0 and pix[1]==255 and pix[2]==255):
+                ytrav+=hres90+5
+                pix = img[ytrav][xtrav]
+                node+=1
+            elif(pix[0]>50 or pix[1]>50 or pix[2]>50):
+                travdown=0
+                
+    elif travleft == 1:
+        while travleft:
+            if space-1>=0:
+                space-=1
+            for i in range(-3,3):
+                img[ytrav+i][xtrav] = [255,0,255]
+            pix_up = img[ytrav-5][xtrav]
+            pix_down = img[ytrav+5][xtrav]
+            pix_left = img[ytrav][xtrav-10]
+            if (pix_up[0]==0 and pix_up[1]==0 and pix_up[2]==0 and space==0) and (pix_down[0]==0 and pix_down[1]==0 and pix_down[2]==0 and space==0):
+                if pix_left[0]==0 and pix_left[1]==0 and pix_left[2]==0:
+                    stored = [ytrav-5,xtrav,0,node]
+                    ar.append(stored)
+                    stored = [ytrav+5,xtrav,2,node]
+                    ar.append(stored)
+                else:
+                    stored = [ytrav+5,xtrav,0,node]
+                    ar.append(stored)
+                    stored = [ytrav+5,xtrav,2,node]
+                    ar.append(stored)
+                cv2.putText(img,"N"+str(node), (xtrav,ytrav-10), cv2.FONT_HERSHEY_SIMPLEX, 1.5, 255)
+                space = 8
+                
+            elif pix_up[0]==0 and pix_up[1]==0 and pix_up[2]==0 and space==0:
+                if pix_left[0]==0 and pix_left[1]==0 and pix_left[2]==0:
+                    stored = [ytrav-5,xtrav,0,node+1]
+                else:
+                    stored = [ytrav-5,xtrav,0,node]
+                ar.append(stored)
+                cv2.putText(img,"N"+str(node), (xtrav,ytrav-10), cv2.FONT_HERSHEY_SIMPLEX, 1.5, 255)
+                space = 8
+                
+            elif pix_down[0]==0 and pix_down[1]==0 and pix_down[2]==0 and space==0:
+                if pix_left[0]==0 and pix_left[1]==0 and pix_left[2]==0:
+                    stored = [ytrav+5,xtrav,2,node+1]
+                else:
+                    stored = [ytrav+5,xtrav,2,node]
+                ar.append(stored)
+                cv2.putText(img,"N"+str(node), (xtrav,ytrav-10), cv2.FONT_HERSHEY_SIMPLEX, 1.5, 255)
+                space = 8
+                
+            xtrav -= 1
+            pix = img[ytrav][xtrav]
+            if(pix[0]==255 and pix[1]==0 and pix[2]==255):
+                travleft=0
+                break
+            if(pix[0]==0 and pix[1]==255 and pix[2]==255):
+                xtrav-=wres-5
+                pix = img[ytrav][xtrav]
+                node+=1
+            elif(pix[0]>50 or pix[1]>50 or pix[2]>50):
+                travleft=0
+    else:
+        flag = 0
+
+cv2.imshow('', img)
+cv2.waitKey(0)    
