@@ -33,7 +33,17 @@ for(int i = 0; i < n; i++){
     }
 }
 
-for(int i = 0; i < n_voltages; i++){
+double[] index = new double[n]; //voltage index
+double[][] mat = newwork_mat.clone();
+for(int i = 0; i < index.length; i++){
+      double inx = index[i];
+      for(int j = 0; j < n; j++){
+        mat[idx][j] = 0;
+      }
+      mat[idx][idx] = 1;
+
+}
+/*for(int i = 0; i < n_voltages; i++){
   rhs[i] = voltages[i];
 }
 
@@ -50,7 +60,7 @@ for(int i = 0; i < n; i++){
       else
          mat[i][j] = network_mat[i][j];
     }
-}
+}*/
 
 //use JAMA package
 
