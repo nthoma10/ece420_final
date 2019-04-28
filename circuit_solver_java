@@ -34,7 +34,7 @@ for(int i = 0; i < n; i++){
 }
 
 double[] index = new double[n]; //voltage index
-double[][] mat = newwork_mat.clone();
+double[][] mat = network_mat.clone();
 for(int i = 0; i < index.length; i++){
       double inx = index[i];
       for(int j = 0; j < n; j++){
